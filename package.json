@@ -1,0 +1,22 @@
+{
+  "name": "proj3-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hy-js/proj3-example.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hy-js/proj3-example/issues"
+  },
+  "homepage": "https://github.com/hy-js/proj3-example#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
