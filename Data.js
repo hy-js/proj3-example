@@ -611,7 +611,7 @@ module.exports.posts = [
 
 module.exports.users = [
   {
-      'firstname': "James",
+    'firstname': "James",
       'lastname': "Bond",
       'email': "james.bond@gmail.com",
       'password': "b6b7fb4cad4bc020f76e16889a8e9065cb708d0f8c304a8a3db609b644da9536"
