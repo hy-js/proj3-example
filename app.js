@@ -1,92 +1,167 @@
-// Imports express module
+// 1. Import express
 const express = require('express');
-const data = require('./Data.js');
+const app = express();
+
+// 1.1 Create port variable
+const port = 3000 || process.env.PORT;
+
+// 2. Import libraries / data
+const { users, posts, comps  } = require('./data/Data');
+let morgan = require('morgan');
+let bcrypt = require('bcryptjs');
+let ejs = require('ejs');
 const path = require('path');
 
-// Initialise express server
-const app = express();
-const PORT = 3000 || process.env.PORT;
-
-// MIDDLEWARE
-// serve static files
-// app.use(express.static(path.join(__dirname, 'public')))
-
-// BODY PARSER
-// TURNS:
-// "firstname=Donald&lastname=Duck&email=coincoin@gmail.com&password=daisy"
-// INTO:
-// {"firstname":"Donald","lastname":"Duck","email":"coincoin@gmail.com","password":"435235452456adfas"}
+// 3. Middleware
+// BODY PARSER:
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// LOGGING MIDDLEWARE
+app.use(morgan('dev'));
+// Static files
+app.use(express.static(path.join(__dirname, 'public')))
+// EJS CONFIG
+app.set('view engine', 'ejs') // sets ejs as view engine
+app.set('views', './views') // sets 'views' folder as teh folder for grabbing templates when res.rendering
 
-// Routes
-// Confirm connected
-app.get('/ping', (req, res) => {
-  res.send('pong');
-});
+// console.log(typeof JSON.stringify(users))
 
-// Base route
+// 4. Routes
+// CRUD commands
+// create, read, update, delete
+// HTTP verbs
+//  post, get, put/patch , delete
+
+// ROOT -----------------------------------
 app.get('/', (req, res) => {
-  res.send('Welcome to our website');
+  res.render("pages/home", { users, title: 'welcome' });
 });
 
-// Get all users route
-app.get('/api/users', (req, res) => {
-  res.json(data.users);
+// POSTS -----------------------------------
+// DISPLAY ALL POSTS
+app.get('/posts', (req, res) => {
+  res.render("pages/posts", { posts, title: 'welcome' });
 });
 
-// Paramaters
-// Get specific user
-app.get('/api/users/:id', function (request, response) {
-  console.log(request.params.id);
-  const id = request.params.id;
-  // Validation for only user ids that exist
-  if (id >= data.users.length) {
-    response.status(400).json({ msg: 'User is not found' });
-  }
-  response.json(data.users[id]);
-});
 
-// Get all posts route
+// GET ALL posts
 app.get('/api/posts', (req, res) => {
-  res.json(data.posts);
+  res.json(posts);
 });
 
-// Get specific post route
-app.get('/api/posts/:id', function (request, response) {
-  console.log(request.params.id);
-  const id = request.params.id;
-  // TODO: Validation for only user ids that exist
-  if (id >= data.posts.length) {
-    response.status(400).json({ msg: 'User is not found' });
+// GET specific post
+app.get('/api/posts/:id', (req, res) => {
+  const index = req.params.id;
+  console.log(typeof index);
+  const _posts = posts.filter((x) => x.id === parseInt(index));
+  // OR use a for loop like so:
+    // let _posts = [];
+    // for (let i = 0; i < posts.length; i++) {
+    //   if (posts[i].id === Number(index)) {
+    //     _posts.push(posts[i]);
+    //   }
+    // }
+
+  // If posts exist show
+  if (_posts.length > 0) {
+    res.send(_posts);
+  } else {
+    res.json({ msg: 'No posts with that id' });
   }
-  response.json(data.posts[id]);
 });
 
 // Create new post
 app.post('/api/posts', (req, res) => {
-  // TODO: Validate data -
-  // Requires body to parsed
-  console.log(req.body);
-  data.posts.push(req.body);
-  res.send(req.body);
+   // TODO: Validate data -
+   console.log(req.body);
+   posts.push(req.body);
+   res.send(posts);
+ });
+
+
+// USERS -----------------------------------
+//   GET ALL users
+app.get('/api/users', (req, res) => {
+  res.json(users);
 });
 
-// Create new USER
-app.post('/api/users', (req, res) => {
-  // TODO: Validate data
-  // Encrypt password
-  // Only allow firstname, lastname, and email fields
-
-  data.users.push(req.body);
-  res.send(data.users);
+//  GET specific user
+app.get('/api/users/:id', (req, res) => {
+  console.log(req.params.id);
+  const index = req.params.id;
+  const user = users[index];
+  // TODO: validation numbers only
+  // Validation for length
+  if (index >= users.length) {
+    res.status(400).json({ msg: 'User is not found' });
+  }
+  res.send(user);
 });
 
-// CRUD commands
-// Create, read, update and delete
-// HTTP methods
-// post, get, put/patch and delete
+// GET a SPECIFIC user's posts
+/*GET specific user*/
+// app.get('/data/posts/:userId', (request, res) => {
+//   // console.log(request.params.userId);
+//   const id = request.params.userId;
+//   // console.log(posts[id]);
+//   const _posts = posts.filter((x) => x.userId === parseInt(id));
+//   res.json(_posts);
+// });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on http://localhost:${PORT}`);
+/*GET specific user*/
+app.get('/data/posts/:user_id', (request, res) => {
+    console.log(request.params.user_id);
+    const id = request.params.user_id;
+    console.log(posts[id]);
+    res.json(posts[id]);
+});
+
+ // POST new USER
+ app.post('/api/users', (req, res) => {
+   // TODO: Validate data
+   // Only allow firstname, lastname, email, password fields
+  //  console.log(req.body);
+  // USER INPUTS
+   const { firstname, lastname, email, password } = req.body
+   // Encrypt password
+   let salt = bcrypt.genSaltSync(10);
+   var hash = bcrypt.hashSync(password, salt);
+  //  Create new user model
+   const newUser = {
+     "user_id": users.length,
+    "firstname": firstname,
+    "lastname": lastname,
+    "email": email,
+    "password": hash
+   }
+   users.push(newUser);
+   res.send(users);
+ });
+
+ // COMPETENCIES-----------------------------------
+//  GET ALL competencies
+app.get('/api/comps', (req, res) => {
+  res.json(comps)
+})
+
+// GET specific person's comps
+// Paramater - lastname
+app.get('/api/comps/:id', (req, res) => {
+  const lastname = req.params.id
+  // console.log(id)
+
+  for(let i = 0; i < comps.length; i++){
+    console.log(comps[i].lastname)
+    // validation - lowercase?
+    if(comps[i].lastname == lastname ){
+        // res.json(comps[i])
+        res.render("pages/individualComp", { comp: comps[i]})
+    }
+  }
+})
+
+
+// 5. Listen to express app
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}/`);
 });
