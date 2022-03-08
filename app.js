@@ -22,7 +22,7 @@ app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 // EJS CONFIG
 app.set('view engine', 'ejs'); // sets ejs as view engine
-app.set('views', './views'); // sets 'views' folder as teh folder for grabbing templates when res.rendering
+app.set('views', './views'); // sets 'views' folder as the folder for grabbing templates when res.rendering
 
 // 4. Routes
 // CRUD commands
